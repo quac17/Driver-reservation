@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from typing import List
-from datetime import datetime
+from datetime import datetime, timedelta
 from database import get_db
 from models import Reserve, ReserveDetail, User, Mentor, Car
 from schemas import ReserveResponse, ReserveCreate, ReserveDetailResponse
@@ -159,7 +159,9 @@ def create_reserve(
             raise HTTPException(status_code=400, detail="Thời gian kết thúc phải sau thời gian bắt đầu")
         
         # Kiểm tra xung đột thời gian với các reserve khác
-        conflicting_reserves = db.query(ReserveDetail).join(Reserve).filter(
+        conflicting_reserves = db.query(ReserveDetail).join(
+            Reserve, ReserveDetail.reserve_id == Reserve.id
+        ).filter(
             Reserve.car_id == reserve.car_id,
             Reserve.status.in_(["pending", "confirmed"]),
             ReserveDetail.start_time < detail.end_time,
@@ -177,18 +179,30 @@ def create_reserve(
         user_id=reserve.user_id,
         mentor_id=reserve.mentor_id,
         car_id=reserve.car_id,
-        status=reserve.status
+        status=reserve.status or "pending"  # Sử dụng status từ request hoặc mặc định "pending"
     )
     db.add(db_reserve)
     db.flush()  # Để lấy id của reserve
     
     # Tạo reserve_details
     for detail in reserve.reserve_details:
+        # Tính giá tự động nếu không được cung cấp hoặc = 0
+        calculated_price = detail.price
+        if calculated_price is None or calculated_price == 0:
+            # Tính số giờ
+            time_diff = detail.end_time - detail.start_time
+            hours = time_diff.total_seconds() / 3600.0
+            
+            # Tính giá = (mentor.price_per_hour + car.price_per_hour) * số giờ
+            mentor_price = mentor.price_per_hour or 0
+            car_price = car.price_per_hour or 0
+            calculated_price = (mentor_price + car_price) * hours
+        
         db_detail = ReserveDetail(
             reserve_id=db_reserve.id,
             start_time=detail.start_time,
             end_time=detail.end_time,
-            price=detail.price,
+            price=calculated_price,
             notes=detail.notes,
             status=detail.status
         )

@@ -276,6 +276,136 @@
 }
 ```
 
+## 5. Flow đặt hẹn cho UI
+
+Flow này mô tả các bước mà UI cần thực hiện để hoàn thành quá trình đặt hẹn với thầy dạy lái xe.
+
+### Bước 1: Đăng nhập (User)
+
+- **Method:** POST
+- **URL:** http://localhost:8000/authen/login
+- **Headers:**
+    - Content-Type: application/x-www-form-urlencoded
+- **Body (form-urlencoded):**
+    - username: user1
+    - password: 123456
+- **Lưu ý:**
+    - Lưu `access_token` vào localStorage/sessionStorage
+    - Lưu thông tin user từ `message.loginData` (bao gồm `user_id`)
+
+### Bước 2: Lấy danh sách Mentors
+
+- **Method:** GET
+- **URL:** http://localhost:8000/mentor/
+- **Lưu ý:**
+    - Không cần authentication
+    - Hiển thị danh sách mentors để user chọn
+    - Hiển thị: tên, email, số điện thoại, số năm kinh nghiệm, số bằng lái
+
+### Bước 3: Lấy danh sách Cars (Available)
+
+- **Method:** GET
+- **URL:** http://localhost:8000/car/?status=available
+- **Lưu ý:**
+    - Không cần authentication
+    - Chỉ lấy các xe có status = "available"
+    - Hiển thị: biển số, hãng, model, màu sắc, năm sản xuất
+
+### Bước 4: Tạo Reserve (Đặt lịch hẹn)
+
+- **Method:** POST
+- **URL:** http://localhost:8000/reserve/
+- **Headers:**
+    - Authorization: Bearer <access_token>
+    - Content-Type: application/json
+- **Body (raw, JSON):**
+```json
+{
+  "user_id": 1,
+  "mentor_id": 1,
+  "car_id": 1,
+  "status": "pending",
+  "reserve_details": [
+    {
+      "start_time": "2025-01-25T08:00:00+00:00",
+      "end_time": "2025-01-25T10:00:00+00:00",
+      "price": 500000,
+      "notes": "Học buổi sáng",
+      "status": "pending"
+    },
+    {
+      "start_time": "2025-01-26T14:00:00+00:00",
+      "end_time": "2025-01-26T16:00:00+00:00",
+      "price": 500000,
+      "notes": "Học buổi chiều",
+      "status": "pending"
+    }
+  ]
+}
+```
+- **Lưu ý:**
+    - `user_id`: Lấy từ thông tin user đã đăng nhập
+    - `mentor_id`: ID của mentor đã chọn ở bước 2
+    - `car_id`: ID của xe đã chọn ở bước 3
+    - `reserve_details`: Danh sách các buổi học
+    - Hệ thống tự động kiểm tra xung đột thời gian
+
+### Bước 5: Xem danh sách Reserves của User
+
+- **Method:** GET
+- **URL:** http://localhost:8000/reserve/
+- **URL với filter:** http://localhost:8000/reserve/?status=pending
+- **Headers:**
+    - Authorization: Bearer <access_token>
+- **Lưu ý:**
+    - User chỉ xem được reserves của chính mình
+    - Có thể filter theo status
+
+### Bước 6: Xem chi tiết Reserve
+
+- **Method:** GET
+- **URL:** http://localhost:8000/reserve/1
+- **Headers:**
+    - Authorization: Bearer <access_token>
+- **Lưu ý:**
+    - Xem thông tin chi tiết của một reserve cụ thể
+    - Bao gồm tất cả reserve_details (các buổi học)
+
+### Tóm tắt Flow UI
+
+```
+1. User đăng nhập → Lấy access_token và user_id
+   ↓
+2. Lấy danh sách mentors → Hiển thị cho user chọn
+   ↓
+3. Lấy danh sách cars (available) → Hiển thị cho user chọn
+   ↓
+4. User điền form đặt hẹn:
+   - Chọn mentor (mentor_id)
+   - Chọn car (car_id)
+   - Nhập thông tin các buổi học:
+     * start_time (ISO 8601 format)
+     * end_time (phải sau start_time)
+     * price
+     * notes (tùy chọn)
+   ↓
+5. Gửi POST /reserve/ → Tạo reserve
+   ↓
+6. Hiển thị danh sách reserves của user (GET /reserve/)
+   ↓
+7. User có thể xem chi tiết từng reserve (GET /reserve/{id})
+```
+
+### Xử lý lỗi trong UI
+
+- **401 Unauthorized:** Token hết hạn → Yêu cầu user đăng nhập lại
+- **400 Bad Request:** 
+    - Xung đột thời gian → Hiển thị "Thời gian đã được đặt, vui lòng chọn thời gian khác"
+    - Car không available → Hiển thị "Xe không khả dụng"
+    - Dữ liệu không hợp lệ → Hiển thị thông báo lỗi cụ thể
+- **403 Forbidden:** User không có quyền → Chuyển về trang đăng nhập
+- **404 Not Found:** Resource không tồn tại → Hiển thị "Không tìm thấy"
+
 ## Lưu ý:
 
 - <access_token> lấy từ API đăng nhập (/authen/login)

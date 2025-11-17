@@ -205,3 +205,20 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+# Client (Next.js / Node) - frontend
+Client/node_modules/
+Client/.next/
+Client/out/
+Client/build/
+Client/dist/
+Client/.env
+Client/.env.local
+Client/.env.*.local
+Client/npm-debug.log*
+Client/yarn-debug.log*
+Client/yarn-error.log*
+Client/.cache/
+Client/.parcel-cache/
+Client/.pnp.*
+Client/package-lock.json

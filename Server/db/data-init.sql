@@ -22,16 +22,16 @@ INSERT INTO users ("username", "name", "password", "email", "phone", "address", 
 ('user3', 'Lê Văn C', '123456', 'user3@example.com', '0901234569', '789 Đường DEF, Quận 3, TP.HCM', true);
 
 -- Thêm dữ liệu master cho mentors
-INSERT INTO mentors ("username", "name", "password", "email", "phone", "license_number", "experience_years", "isActive") VALUES
-('mentor1', 'Trần Văn B', '123456', 'mentor1@example.com', '0912345678', 'DL-123456', 5, true),
-('mentor2', 'Nguyễn Thị C', '123456', 'mentor2@example.com', '0912345679', 'DL-123457', 8, true),
-('mentor3', 'Lê Văn D', '123456', 'mentor3@example.com', '0912345680', 'DL-123458', 3, true);
+INSERT INTO mentors ("username", "name", "password", "email", "phone", "license_number", "experience_years", "price_per_hour", "isActive") VALUES
+('mentor1', 'Trần Văn B', '123456', 'mentor1@example.com', '0912345678', 'DL-123456', 5, 200000, true),
+('mentor2', 'Nguyễn Thị C', '123456', 'mentor2@example.com', '0912345679', 'DL-123457', 8, 250000, true),
+('mentor3', 'Lê Văn D', '123456', 'mentor3@example.com', '0912345680', 'DL-123458', 3, 180000, true);
 
 -- Thêm dữ liệu master cho cars
-INSERT INTO cars ("license_plate", "brand", "model", "color", "year", "status", "isActive") VALUES
-('30A-12345', 'Toyota', 'Vios', 'Trắng', 2023, 'available', true),
-('30A-12346', 'Honda', 'City', 'Đen', 2022, 'available', true),
-('30A-12347', 'Mazda', 'Mazda3', 'Xám', 2024, 'available', true);
+INSERT INTO cars ("license_plate", "brand", "model", "color", "year", "status", "price_per_hour", "isActive") VALUES
+('30A-12345', 'Toyota', 'Vios', 'Trắng', 2023, 'available', 150000, true),
+('30A-12346', 'Honda', 'City', 'Đen', 2022, 'available', 180000, true),
+('30A-12347', 'Mazda', 'Mazda3', 'Xám', 2024, 'available', 200000, true);
 
 -- Hiển thị kết quả
 SELECT 'Đã thêm ' || COUNT(*) || ' users vào database' as result FROM users;

@@ -70,6 +70,7 @@ CREATE TABLE public.mentors (
     phone character varying(20),
     license_number character varying(50),
     experience_years integer DEFAULT 0,
+    price_per_hour double precision DEFAULT 0,
     "isActive" boolean DEFAULT true,
     "createdAt" timestamp with time zone DEFAULT now(),
     "updatedAt" timestamp with time zone DEFAULT now()
@@ -109,6 +110,7 @@ CREATE TABLE public.cars (
     color character varying(50),
     year integer,
     status character varying(20) DEFAULT 'available'::character varying,
+    price_per_hour double precision DEFAULT 0,
     "isActive" boolean DEFAULT true,
     "createdAt" timestamp with time zone DEFAULT now(),
     "updatedAt" timestamp with time zone DEFAULT now()
@@ -252,16 +254,16 @@ COPY public.users (id, username, password, name, email, phone, address, "isActiv
 -- Data for Name: mentors; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.mentors (id, username, password, name, email, phone, license_number, experience_years, "isActive", "createdAt", "updatedAt") FROM stdin;
-1	mentor1	123456	Trần Văn B	mentor1@example.com	0912345678	DL-123456	5	t	2025-01-20 10:00:00.000000+00	2025-01-20 10:00:00.000000+00
+COPY public.mentors (id, username, password, name, email, phone, license_number, experience_years, price_per_hour, "isActive", "createdAt", "updatedAt") FROM stdin;
+1	mentor1	123456	Trần Văn B	mentor1@example.com	0912345678	DL-123456	5	200000	t	2025-01-20 10:00:00.000000+00	2025-01-20 10:00:00.000000+00
 \.
 
 --
 -- Data for Name: cars; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.cars (id, license_plate, brand, model, color, year, status, "isActive", "createdAt", "updatedAt") FROM stdin;
-1	30A-12345	Toyota	Vios	Trắng	2023	available	t	2025-01-20 10:00:00.000000+00	2025-01-20 10:00:00.000000+00
+COPY public.cars (id, license_plate, brand, model, color, year, status, price_per_hour, "isActive", "createdAt", "updatedAt") FROM stdin;
+1	30A-12345	Toyota	Vios	Trắng	2023	available	150000	t	2025-01-20 10:00:00.000000+00	2025-01-20 10:00:00.000000+00
 \.
 
 --

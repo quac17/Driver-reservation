@@ -18,7 +18,7 @@ Trước khi bắt đầu, đảm bảo máy tính của bạn đã cài đặt:
 
 ```bash
 git clone <repository-url>
-cd Driver-reservaton-BE
+cd Driver-reservation
 ```
 
 ### Bước 2: Cài đặt dependencies
@@ -563,6 +563,229 @@ DriveCoachReservation/
 - ✅ Auto-generated API docs tại `/docs`
 - ✅ Phân quyền: User chỉ xem reserves của chính mình
 - ✅ Timestamp fields (createdAt, updatedAt)
+
+## Flow đặt hẹn cho UI
+
+Flow này mô tả các bước mà UI cần thực hiện để hoàn thành quá trình đặt hẹn với thầy dạy lái xe.
+
+### Bước 1: Đăng nhập (User)
+
+**API:** `POST /authen/login`
+
+- User cần đăng nhập để lấy `access_token`
+- Lưu `access_token` vào localStorage/sessionStorage để sử dụng cho các API tiếp theo
+- Lưu thông tin user từ `message.loginData` (bao gồm `user_id`)
+
+**Response:**
+```json
+{
+  "access_token": "eyJ0eXAiOiJKV1QiLCJhbGc...",
+  "token_type": "bearer",
+  "message": {
+    "loginData": {
+      "username": "user1",
+      "name": "Nguyễn Văn A",
+      "isMentor": false,
+      "email": "user1@example.com",
+      "phone": "0901234567"
+    }
+  }
+}
+```
+
+### Bước 2: Lấy danh sách Mentors
+
+**API:** `GET /mentor/`
+
+- Không cần authentication
+- Hiển thị danh sách mentors để user chọn
+- Hiển thị thông tin: tên, email, số điện thoại, số năm kinh nghiệm, số bằng lái
+
+**Response:**
+```json
+[
+  {
+    "id": 1,
+    "name": "Trần Văn B",
+    "email": "mentor1@example.com",
+    "phone": "0912345678",
+    "license_number": "DL-123456",
+    "experience_years": 5
+  }
+]
+```
+
+### Bước 3: Lấy danh sách Cars (Available)
+
+**API:** `GET /car/?status=available`
+
+- Không cần authentication
+- Chỉ lấy các xe có status = "available" để đảm bảo có thể đặt lịch
+- Hiển thị thông tin: biển số, hãng, model, màu sắc, năm sản xuất
+
+**Response:**
+```json
+[
+  {
+    "id": 1,
+    "license_plate": "30A-12345",
+    "brand": "Toyota",
+    "model": "Vios",
+    "color": "Trắng",
+    "year": 2023,
+    "status": "available"
+  }
+]
+```
+
+### Bước 4: Tạo Reserve (Đặt lịch hẹn)
+
+**API:** `POST /reserve/`
+
+- **Cần authentication:** Header `Authorization: Bearer <access_token>`
+- User chọn:
+  - `mentor_id`: ID của mentor đã chọn ở bước 2
+  - `car_id`: ID của xe đã chọn ở bước 3
+  - `user_id`: Lấy từ thông tin user đã đăng nhập (bước 1)
+- Tạo danh sách `reserve_details` với các buổi học:
+  - `start_time`: Thời gian bắt đầu (ISO 8601 format với timezone)
+  - `end_time`: Thời gian kết thúc (phải sau start_time)
+  - `price`: Giá tiền cho mỗi buổi học
+  - `notes`: Ghi chú (tùy chọn)
+  - `status`: "pending" (mặc định)
+
+**Request Body:**
+```json
+{
+  "user_id": 1,
+  "mentor_id": 1,
+  "car_id": 1,
+  "status": "pending",
+  "reserve_details": [
+    {
+      "start_time": "2025-01-25T08:00:00+00:00",
+      "end_time": "2025-01-25T10:00:00+00:00",
+      "price": 500000,
+      "notes": "Học buổi sáng",
+      "status": "pending"
+    },
+    {
+      "start_time": "2025-01-26T14:00:00+00:00",
+      "end_time": "2025-01-26T16:00:00+00:00",
+      "price": 500000,
+      "notes": "Học buổi chiều",
+      "status": "pending"
+    }
+  ]
+}
+```
+
+**Response:**
+```json
+{
+  "id": 1,
+  "user_id": 1,
+  "mentor_id": 1,
+  "car_id": 1,
+  "status": "pending",
+  "createdAt": "2025-01-25T07:00:00+00:00",
+  "updatedAt": "2025-01-25T07:00:00+00:00",
+  "reserve_details": [
+    {
+      "id": 1,
+      "reserve_id": 1,
+      "start_time": "2025-01-25T08:00:00+00:00",
+      "end_time": "2025-01-25T10:00:00+00:00",
+      "price": 500000,
+      "notes": "Học buổi sáng",
+      "status": "pending"
+    }
+  ]
+}
+```
+
+**Lưu ý:**
+- Hệ thống sẽ tự động kiểm tra xung đột thời gian
+- Nếu có xung đột, API sẽ trả về lỗi
+- Car phải có status = "available" mới có thể đặt lịch
+- User chỉ có thể đặt lịch cho chính mình (user_id phải khớp với user đang đăng nhập)
+
+### Bước 5: Xem danh sách Reserves của User
+
+**API:** `GET /reserve/`
+
+- **Cần authentication:** Header `Authorization: Bearer <access_token>`
+- User chỉ xem được reserves của chính mình
+- Có thể filter theo status: `GET /reserve/?status=pending`
+
+**Response:**
+```json
+[
+  {
+    "id": 1,
+    "user_id": 1,
+    "mentor_id": 1,
+    "car_id": 1,
+    "status": "pending",
+    "createdAt": "2025-01-25T07:00:00+00:00",
+    "reserve_details": [...]
+  }
+]
+```
+
+### Bước 6: Xem chi tiết Reserve
+
+**API:** `GET /reserve/{reserve_id}`
+
+- **Cần authentication:** Header `Authorization: Bearer <access_token>`
+- Xem thông tin chi tiết của một reserve cụ thể
+- Bao gồm tất cả reserve_details (các buổi học)
+
+**Response:**
+```json
+{
+  "id": 1,
+  "user_id": 1,
+  "mentor_id": 1,
+  "car_id": 1,
+  "status": "pending",
+  "createdAt": "2025-01-25T07:00:00+00:00",
+  "updatedAt": "2025-01-25T07:00:00+00:00",
+  "reserve_details": [
+    {
+      "id": 1,
+      "reserve_id": 1,
+      "start_time": "2025-01-25T08:00:00+00:00",
+      "end_time": "2025-01-25T10:00:00+00:00",
+      "price": 500000,
+      "notes": "Học buổi sáng",
+      "status": "pending"
+    }
+  ]
+}
+```
+
+### Tóm tắt Flow
+
+```
+1. User đăng nhập → Lấy access_token và user_id
+2. Lấy danh sách mentors → Hiển thị cho user chọn
+3. Lấy danh sách cars (available) → Hiển thị cho user chọn
+4. User điền form đặt hẹn:
+   - Chọn mentor
+   - Chọn car
+   - Nhập thông tin các buổi học (start_time, end_time, price, notes)
+5. Gửi POST /reserve/ → Tạo reserve
+6. Hiển thị danh sách reserves của user
+7. User có thể xem chi tiết từng reserve
+```
+
+### Xử lý lỗi trong UI
+
+- **401 Unauthorized:** Token hết hạn hoặc không hợp lệ → Yêu cầu user đăng nhập lại
+- **400 Bad Request:** Dữ liệu không hợp lệ (xung đột thời gian, car không available) → Hiển thị thông báo lỗi cụ thể
+- **403 Forbidden:** User không có quyền truy cập → Chuyển về trang đăng nhập
+- **404 Not Found:** Resource không tồn tại → Hiển thị thông báo không tìm thấy
 
 ## Lưu ý quan trọng
 

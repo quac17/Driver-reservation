@@ -38,6 +38,7 @@ class MentorBase(BaseModel):
     phone: Optional[str] = None
     license_number: Optional[str] = None
     experience_years: Optional[int] = 0
+    price_per_hour: Optional[float] = 0
 
 class MentorCreate(MentorBase):
     password: str
@@ -49,6 +50,7 @@ class MentorUpdate(BaseModel):
     phone: Optional[str] = None
     license_number: Optional[str] = None
     experience_years: Optional[int] = None
+    price_per_hour: Optional[float] = None
     password: Optional[str] = None
     isActive: Optional[bool] = None
 
@@ -181,6 +183,7 @@ class CarBase(BaseModel):
     color: Optional[str] = None
     year: Optional[int] = None
     status: Optional[str] = "available"
+    price_per_hour: Optional[float] = 0
 
 class CarResponse(CarBase):
     id: int
@@ -221,6 +224,7 @@ class ReserveCreate(BaseModel):
     user_id: int
     mentor_id: int
     car_id: int
+    status: Optional[str] = "pending"
     reserve_details: List[ReserveDetailCreate]
 
 class ReserveResponse(ReserveBase):
