@@ -56,7 +56,7 @@ export default function Header() {
     >
       <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
         <Title level={4} style={{ margin: 0, cursor: 'pointer' }} onClick={handleHome}>
-          🚗 Drive Coach Reservation
+          Drive Coach Reservation
         </Title>
        
       </div>
