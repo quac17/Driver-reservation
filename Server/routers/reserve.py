@@ -243,3 +243,74 @@ def create_reserve(
     
     return reserve_dict
 
+
+@router.post("/detail/{detail_id}/start", response_model=ReserveDetailResponse)
+def start_lesson(
+    detail_id: int,
+    db: Session = Depends(get_db),
+    current_user=Depends(currentLoginUser)
+):
+    """Mentor xác nhận bắt đầu buổi học"""
+    # Chỉ mentor mới có quyền
+    if not current_user["isMentor"]:
+        raise HTTPException(status_code=403, detail="Chỉ mentor mới có thể thực hiện thao tác này")
+    
+    # Lấy detail
+    detail = db.query(ReserveDetail).filter(ReserveDetail.id == detail_id).first()
+    if not detail:
+        raise HTTPException(status_code=404, detail="Buổi học không tồn tại")
+    
+    # Lấy reserve để kiểm tra mentor
+    reserve = db.query(Reserve).filter(Reserve.id == detail.reserve_id).first()
+    if not reserve:
+        raise HTTPException(status_code=404, detail="Reserve không tồn tại")
+    
+    if reserve.mentor_id != current_user["user"].id:
+        raise HTTPException(status_code=403, detail="Bạn không phải là mentor của buổi học này")
+    
+    # Cập nhật thông tin
+    detail.status = "in_progress"
+    detail.actual_start_time = datetime.now()
+    
+    db.commit()
+    db.refresh(detail)
+    
+    return detail
+
+@router.post("/detail/{detail_id}/end", response_model=ReserveDetailResponse)
+def end_lesson(
+    detail_id: int,
+    db: Session = Depends(get_db),
+    current_user=Depends(currentLoginUser)
+):
+    """Mentor xác nhận kết thúc buổi học"""
+    # Chỉ mentor mới có quyền
+    if not current_user["isMentor"]:
+        raise HTTPException(status_code=403, detail="Chỉ mentor mới có thể thực hiện thao tác này")
+    
+    # Lấy detail
+    detail = db.query(ReserveDetail).filter(ReserveDetail.id == detail_id).first()
+    if not detail:
+        raise HTTPException(status_code=404, detail="Buổi học không tồn tại")
+    
+    # Lấy reserve để kiểm tra mentor
+    reserve = db.query(Reserve).filter(Reserve.id == detail.reserve_id).first()
+    if not reserve:
+        raise HTTPException(status_code=404, detail="Reserve không tồn tại")
+    
+    if reserve.mentor_id != current_user["user"].id:
+        raise HTTPException(status_code=403, detail="Bạn không phải là mentor của buổi học này")
+    
+    # Cập nhật thông tin
+    detail.status = "completed"
+    detail.actual_end_time = datetime.now()
+    
+    # Nếu tất cả details trong reserve đều completed thì update status của reserve
+    all_details = db.query(ReserveDetail).filter(ReserveDetail.reserve_id == reserve.id).all()
+    if all(d.status == "completed" for d in all_details):
+        reserve.status = "completed"
+    
+    db.commit()
+    db.refresh(detail)
+    
+    return detail

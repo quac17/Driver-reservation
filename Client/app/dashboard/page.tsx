@@ -38,8 +38,8 @@ export default function DashboardPage() {
           )}
         </div>
 
-        {!user?.isMentor && (
-          <Row gutter={[16, 16]}>
+        <Row gutter={[16, 16]}>
+          {!user?.isMentor && (
             <Col xs={24} sm={12} md={8}>
               <Card
                 hoverable
@@ -51,30 +51,30 @@ export default function DashboardPage() {
                 <Text type="secondary">Tạo đặt hẹn mới với thầy dạy lái xe</Text>
               </Card>
             </Col>
-            <Col xs={24} sm={12} md={8}>
-              <Card
-                hoverable
-                style={{ textAlign: 'center', height: '100%' }}
-                onClick={() => router.push('/reserve')}
-              >
-                <UnorderedListOutlined style={{ fontSize: 48, color: '#52c41a', marginBottom: 16 }} />
-                <Title level={5}>Danh sách đặt hẹn</Title>
-                <Text type="secondary">Xem tất cả đặt hẹn của bạn</Text>
-              </Card>
-            </Col>
-            <Col xs={24} sm={12} md={8}>
-              <Card
-                hoverable
-                style={{ textAlign: 'center', height: '100%' }}
-                onClick={() => router.push('/reserve')}
-              >
-                <CalendarOutlined style={{ fontSize: 48, color: '#faad14', marginBottom: 16 }} />
-                <Title level={5}>Lịch học</Title>
-                <Text type="secondary">Xem lịch học của bạn</Text>
-              </Card>
-            </Col>
-          </Row>
-        )}
+          )}
+          <Col xs={24} sm={12} md={8}>
+            <Card
+              hoverable
+              style={{ textAlign: 'center', height: '100%' }}
+              onClick={() => router.push('/reserve')}
+            >
+              <UnorderedListOutlined style={{ fontSize: 48, color: '#52c41a', marginBottom: 16 }} />
+              <Title level={5}>Danh sách đặt hẹn</Title>
+              <Text type="secondary">Xem tất cả đặt hẹn của bạn</Text>
+            </Card>
+          </Col>
+          <Col xs={24} sm={12} md={8}>
+            <Card
+              hoverable
+              style={{ textAlign: 'center', height: '100%' }}
+              onClick={() => router.push('/reserve')}
+            >
+              <CalendarOutlined style={{ fontSize: 48, color: '#faad14', marginBottom: 16 }} />
+              <Title level={5}>Lịch học</Title>
+              <Text type="secondary">Xem lịch học của bạn</Text>
+            </Card>
+          </Col>
+        </Row>
       </Card>
     </div>
   );

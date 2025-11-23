@@ -169,6 +169,8 @@
         "price": 500000,
         "notes": "Học buổi sáng",
         "status": "pending",
+        "actual_start_time": null,
+        "actual_end_time": null,
         "createdAt": "2025-01-25T07:00:00+00:00",
         "updatedAt": "2025-01-25T07:00:00+00:00"
       }

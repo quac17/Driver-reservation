@@ -137,6 +137,8 @@ class ReserveDetail(Base):
     price = Column(Float, default=0)
     notes = Column(String, nullable=True)
     status = Column(String(20), default='pending')
+    actual_start_time = Column(DateTime(timezone=True), nullable=True)
+    actual_end_time = Column(DateTime(timezone=True), nullable=True)
     createdAt = Column(DateTime(timezone=True), server_default=func.now())
     updatedAt = Column(DateTime(timezone=True), onupdate=func.now()) 
 

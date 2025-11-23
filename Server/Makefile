@@ -12,6 +12,10 @@ drop-db:
 run:
 	uvicorn main:app --reload
 
+# Chạy unit tests
+test:
+	pytest
+
 # Build Docker image
 build-docker:
 	docker build -t myapp .

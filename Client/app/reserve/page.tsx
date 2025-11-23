@@ -13,6 +13,7 @@ export default function ReservesPage() {
   const [reserves, setReserves] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [user, setUser] = useState<any | null>(null);
 
   useEffect(() => {
     const token = typeof window !== 'undefined' ? localStorage.getItem('access_token') : null;
@@ -20,6 +21,8 @@ export default function ReservesPage() {
       router.replace('/login');
       return;
     }
+    const ld = localStorage.getItem('loginData');
+    if (ld) setUser(JSON.parse(ld));
     loadReserves();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [statusFilter]);
@@ -33,8 +36,20 @@ export default function ReservesPage() {
     } catch (err: any) {
       // Không hiển thị error nếu đã redirect về login (401)
       if (err?.response?.status !== 401) {
-        const errMsg = err?.response?.data?.detail || err.message || 'Không thể tải danh sách đặt hẹn';
-        message.error(errMsg);
+        // Nếu lỗi là do list rỗng (có thể API trả về 404 hoặc format khác), ta cứ set empty list
+        // Tuy nhiên, nếu API chuẩn trả về [], thì không vào catch.
+        // Kiểm tra kỹ hơn response
+        console.error("Load reserves error:", err);
+        setReserves([]);
+        // Chỉ hiện lỗi nếu thực sự là lỗi hệ thống, không phải do không có data
+        // Tạm thời suppress lỗi hiển thị nếu muốn "không báo lỗi khi list trống"
+        // Nhưng nếu API trả 500 thì vẫn nên báo.
+        // Giả sử API trả 200 với empty list thì ok.
+        // Nếu API trả 404 khi không có data thì ta catch và ignore.
+        if (err?.response?.status !== 404) {
+          const errMsg = err?.response?.data?.detail || err.message || 'Không thể tải danh sách đặt hẹn';
+          message.error(errMsg);
+        }
       }
       // Reset reserves nếu có lỗi
       setReserves([]);
@@ -73,12 +88,14 @@ export default function ReservesPage() {
           confirmed: 'green',
           cancelled: 'red',
           completed: 'blue',
+          in_progress: 'processing',
         };
         const textMap: Record<string, string> = {
           pending: 'Chờ xác nhận',
           confirmed: 'Đã xác nhận',
           cancelled: 'Đã hủy',
           completed: 'Hoàn thành',
+          in_progress: 'Đang diễn ra',
         };
         return <Tag color={colorMap[status] || 'default'}>{textMap[status] || status}</Tag>;
       },
@@ -137,11 +154,14 @@ export default function ReservesPage() {
                 { value: 'confirmed', label: 'Đã xác nhận' },
                 { value: 'cancelled', label: 'Đã hủy' },
                 { value: 'completed', label: 'Hoàn thành' },
+                { value: 'in_progress', label: 'Đang diễn ra' },
               ]}
             />
-            <Button type="primary" icon={<PlusOutlined />} onClick={() => router.push('/reserve/new')}>
-              Đặt lịch hẹn mới
-            </Button>
+            {!user?.isMentor && (
+              <Button type="primary" icon={<PlusOutlined />} onClick={() => router.push('/reserve/new')}>
+                Đặt lịch hẹn mới
+              </Button>
+            )}
           </Space>
         </div>
         <Table

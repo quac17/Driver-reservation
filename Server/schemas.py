@@ -201,6 +201,8 @@ class ReserveDetailBase(BaseModel):
     price: Optional[float] = 0
     notes: Optional[str] = None
     status: Optional[str] = "pending"
+    actual_start_time: Optional[datetime] = None
+    actual_end_time: Optional[datetime] = None
 
 class ReserveDetailCreate(ReserveDetailBase):
     pass

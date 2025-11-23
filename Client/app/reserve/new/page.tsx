@@ -29,6 +29,11 @@ export default function NewReservePage() {
     const ld = localStorage.getItem('loginData');
     if (ld) {
       const userData = JSON.parse(ld);
+      if (userData.isMentor) {
+        message.warning('Mentor không thể tạo đặt hẹn');
+        router.replace('/reserve');
+        return;
+      }
       setUser(userData);
       // Load user_id from API
       loadCurrentUser(userData.username);
@@ -112,17 +117,17 @@ export default function NewReservePage() {
 
   const calculatePrice = (startTime: any, endTime: any, date: any) => {
     if (!startTime || !endTime || !date) return 0;
-    
+
     const mentorPrice = selectedMentor?.price_per_hour || 0;
     const carPrice = selectedCar?.price_per_hour || 0;
-    
+
     if (mentorPrice === 0 && carPrice === 0) return 0;
-    
+
     // Calculate hours
     const start = dayjs(`${date.format('YYYY-MM-DD')} ${startTime.format('HH:mm')}`);
     const end = dayjs(`${date.format('YYYY-MM-DD')} ${endTime.format('HH:mm')}`);
     const hours = end.diff(start, 'hour', true);
-    
+
     return (mentorPrice + carPrice) * hours;
   };
 
@@ -140,7 +145,7 @@ export default function NewReservePage() {
         const date = detail.date.format('YYYY-MM-DD');
         const startTime = detail.start_time.format('HH:mm');
         const endTime = detail.end_time.format('HH:mm');
-        
+
         const start_datetime = `${date}T${startTime}:00+00:00`;
         const end_datetime = `${date}T${endTime}:00+00:00`;
 
@@ -287,8 +292,8 @@ export default function NewReservePage() {
                         label="Ngày học"
                         rules={[{ required: true, message: 'Vui lòng chọn ngày học' }]}
                       >
-                        <DatePicker 
-                          style={{ width: '100%' }} 
+                        <DatePicker
+                          style={{ width: '100%' }}
                           format="DD/MM/YYYY"
                           onChange={() => {
                             // Recalculate price when date changes
@@ -314,8 +319,8 @@ export default function NewReservePage() {
                         label="Thời gian bắt đầu"
                         rules={[{ required: true, message: 'Vui lòng chọn thời gian bắt đầu' }]}
                       >
-                        <TimePicker 
-                          style={{ width: '100%' }} 
+                        <TimePicker
+                          style={{ width: '100%' }}
                           format="HH:mm"
                           onChange={() => {
                             // Recalculate price when start time changes
@@ -341,8 +346,8 @@ export default function NewReservePage() {
                         label="Thời gian kết thúc"
                         rules={[{ required: true, message: 'Vui lòng chọn thời gian kết thúc' }]}
                       >
-                        <TimePicker 
-                          style={{ width: '100%' }} 
+                        <TimePicker
+                          style={{ width: '100%' }}
                           format="HH:mm"
                           onChange={() => {
                             // Recalculate price when end time changes

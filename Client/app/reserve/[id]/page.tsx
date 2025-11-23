@@ -1,10 +1,11 @@
 "use client";
 import { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { Card, Typography, Button, Descriptions, Tag, Table, Space, message, Spin } from 'antd';
-import { ArrowLeftOutlined } from '@ant-design/icons';
+import { Card, Typography, Button, Descriptions, Tag, Table, Space, message, Spin, Modal } from 'antd';
+import { ArrowLeftOutlined, PlayCircleOutlined, CheckCircleOutlined } from '@ant-design/icons';
 import api from '../../../lib/api';
 import dayjs from 'dayjs';
+import axios from 'axios';
 
 const { Title } = Typography;
 
@@ -14,6 +15,7 @@ export default function ReserveDetailPage() {
   const reserveId = params?.id as string;
   const [reserve, setReserve] = useState<any | null>(null);
   const [loading, setLoading] = useState(false);
+  const [user, setUser] = useState<any | null>(null);
 
   useEffect(() => {
     const token = typeof window !== 'undefined' ? localStorage.getItem('access_token') : null;
@@ -21,6 +23,9 @@ export default function ReserveDetailPage() {
       router.replace('/login');
       return;
     }
+    const ld = localStorage.getItem('loginData');
+    if (ld) setUser(JSON.parse(ld));
+
     if (reserveId) {
       loadReserve();
     }
@@ -47,18 +52,46 @@ export default function ReserveDetailPage() {
     }
   };
 
+  const handleStartLesson = async (detailId: number) => {
+    try {
+      const token = localStorage.getItem('access_token');
+      await axios.post(`http://localhost:8000/reserve/detail/${detailId}/start`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      message.success('Đã bắt đầu buổi học');
+      loadReserve();
+    } catch (err: any) {
+      message.error(err?.response?.data?.detail || 'Có lỗi xảy ra');
+    }
+  };
+
+  const handleEndLesson = async (detailId: number) => {
+    try {
+      const token = localStorage.getItem('access_token');
+      await axios.post(`http://localhost:8000/reserve/detail/${detailId}/end`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      message.success('Đã kết thúc buổi học');
+      loadReserve();
+    } catch (err: any) {
+      message.error(err?.response?.data?.detail || 'Có lỗi xảy ra');
+    }
+  };
+
   const getStatusTag = (status: string) => {
     const colorMap: Record<string, string> = {
       pending: 'orange',
       confirmed: 'green',
       cancelled: 'red',
       completed: 'blue',
+      in_progress: 'processing',
     };
     const textMap: Record<string, string> = {
       pending: 'Chờ xác nhận',
       confirmed: 'Đã xác nhận',
       cancelled: 'Đã hủy',
       completed: 'Hoàn thành',
+      in_progress: 'Đang diễn ra',
     };
     return <Tag color={colorMap[status] || 'default'}>{textMap[status] || status}</Tag>;
   };
@@ -74,7 +107,7 @@ export default function ReserveDetailPage() {
       },
     },
     {
-      title: 'Thời gian',
+      title: 'Thời gian dự kiến',
       key: 'time',
       width: 180,
       render: (_: any, record: any) => {
@@ -87,6 +120,23 @@ export default function ReserveDetailPage() {
             <Typography.Text type="secondary" style={{ fontSize: 12 }}>
               ({hours.toFixed(1)} giờ)
             </Typography.Text>
+          </div>
+        );
+      },
+    },
+    {
+      title: 'Thời gian thực tế',
+      key: 'actual_time',
+      width: 180,
+      render: (_: any, record: any) => {
+        if (!record.actual_start_time) return '-';
+        const start = dayjs(record.actual_start_time);
+        const end = record.actual_end_time ? dayjs(record.actual_end_time) : null;
+
+        return (
+          <div>
+            <div>Bắt đầu: {start.format('HH:mm')}</div>
+            {end && <div>Kết thúc: {end.format('HH:mm')}</div>}
           </div>
         );
       },
@@ -127,6 +177,45 @@ export default function ReserveDetailPage() {
       render: (notes: string) => notes || '-',
     },
   ];
+
+  // Add action column for mentors
+  if (user?.isMentor) {
+    detailColumns.push({
+      title: 'Thao tác',
+      key: 'action',
+      width: 150,
+      render: (_: any, record: any) => {
+        // Start button: status is pending or confirmed
+        if (['pending', 'confirmed'].includes(record.status)) {
+          return (
+            <Button
+              type="primary"
+              icon={<PlayCircleOutlined />}
+              size="small"
+              onClick={() => handleStartLesson(record.id)}
+            >
+              Bắt đầu
+            </Button>
+          );
+        }
+        // End button: status is in_progress
+        if (record.status === 'in_progress') {
+          return (
+            <Button
+              type="primary"
+              danger
+              icon={<CheckCircleOutlined />}
+              size="small"
+              onClick={() => handleEndLesson(record.id)}
+            >
+              Kết thúc
+            </Button>
+          );
+        }
+        return null;
+      },
+    } as any);
+  }
 
   if (loading) {
     return (

@@ -89,6 +89,20 @@ python main.py
 
 Ứng dụng sẽ chạy tại: **http://localhost:8000**
 
+### Bước 6: Chạy Unit Tests
+
+Để chạy các unit test cho hệ thống (ví dụ: authentication flow):
+
+**Sử dụng Makefile:**
+```bash
+make test
+```
+
+**Hoặc thủ công:**
+```bash
+pytest
+```
+
 ### Truy cập API Documentation
 
 Sau khi server khởi động, truy cập:

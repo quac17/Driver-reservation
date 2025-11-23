@@ -186,6 +186,8 @@ CREATE TABLE public.reserve_details (
     price double precision DEFAULT 0,
     notes text,
     status character varying(20) DEFAULT 'pending'::character varying,
+    actual_start_time timestamp with time zone,
+    actual_end_time timestamp with time zone,
     "createdAt" timestamp with time zone DEFAULT now(),
     "updatedAt" timestamp with time zone DEFAULT now()
 );
